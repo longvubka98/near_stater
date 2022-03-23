@@ -31,7 +31,7 @@ impl Default for WhitelistIdoContract {
 impl WhitelistIdoContract {
     /// Initializes the contract with the given owner account ID.
     #[init]
-    pub fn new(owner_account_id: AccountId) -> Self {
+    pub fn init(owner_account_id: AccountId) -> Self {
         assert!(!env::state_exists(), "Already initialized");
         assert!(
             env::is_valid_account_id(owner_account_id.as_bytes()),
@@ -141,6 +141,7 @@ impl WhitelistIdoContract {
         let mut add_whitelist_account_ids = Vec::new();
         for account_id in account_ids {
             if env::is_valid_account_id(account_id.as_bytes())
+                && self.registration_whitelist.contains(&account_id)
                 && !self.whitelist.contains(&account_id)
             {
                 self.whitelist.insert(&account_id);
@@ -210,7 +211,7 @@ mod tests {
     fn is_owner() {
         let context = get_context(vec![], false);
         testing_env!(context);
-        let contract = WhitelistIdoContract::new("dragonvu.testnet".to_string());
+        let contract = WhitelistIdoContract::init("dragonvu.testnet".to_string());
         assert_eq!(true, contract.is_owner("dragonvu.testnet".to_string()));
     }
 
@@ -219,7 +220,7 @@ mod tests {
     fn is_owner_fake() {
         let context = get_context(vec![], false);
         testing_env!(context);
-        let contract = WhitelistIdoContract::new("dragonvu.testnet".to_string());
+        let contract = WhitelistIdoContract::init("dragonvu.testnet".to_string());
         assert_eq!(false, contract.is_owner("vuongnt.testnet".to_string()));
     }
 
@@ -228,7 +229,7 @@ mod tests {
     fn tranfer_owner() {
         let context = get_context(vec![], false);
         testing_env!(context);
-        let mut contract = WhitelistIdoContract::new("dragonvu.testnet".to_string());
+        let mut contract = WhitelistIdoContract::init("dragonvu.testnet".to_string());
         assert_eq!(true, contract.tranfer_owner("vuongnt.testnet".to_string()));
     }
 
@@ -237,7 +238,7 @@ mod tests {
     fn tranfer_and_check_old_owner() {
         let context = get_context(vec![], false);
         testing_env!(context);
-        let mut contract = WhitelistIdoContract::new("dragonvu.testnet".to_string());
+        let mut contract = WhitelistIdoContract::init("dragonvu.testnet".to_string());
         contract.tranfer_owner("vuongnt.testnet".to_string());
         assert_eq!(false, contract.is_owner("dragonvu.testnet".to_string()));
     }
@@ -247,7 +248,7 @@ mod tests {
     fn tranfer_and_check_new_owner() {
         let context = get_context(vec![], false);
         testing_env!(context);
-        let mut contract = WhitelistIdoContract::new("dragonvu.testnet".to_string());
+        let mut contract = WhitelistIdoContract::init("dragonvu.testnet".to_string());
         contract.tranfer_owner("vuongnt.testnet".to_string());
         assert_eq!(true, contract.is_owner("vuongnt.testnet".to_string()));
     }
@@ -257,7 +258,7 @@ mod tests {
     fn check_initial_registration_whitelisted() {
         let context = get_context(vec![], false);
         testing_env!(context);
-        let contract = WhitelistIdoContract::new("dragonvu.testnet".to_string());
+        let contract = WhitelistIdoContract::init("dragonvu.testnet".to_string());
         assert_eq!(
             false,
             contract.is_registration_whitelisted("vuongnt.testnet".to_string())
@@ -269,7 +270,7 @@ mod tests {
     fn add_and_check_registration_whitelisted() {
         let context = get_context(vec![], false);
         testing_env!(context);
-        let mut contract = WhitelistIdoContract::new("dragonvu.testnet".to_string());
+        let mut contract = WhitelistIdoContract::init("dragonvu.testnet".to_string());
         contract.add_registration_whitelist(["vuongnt.testnet".to_string()].to_vec());
         assert_eq!(
             true,
@@ -282,7 +283,7 @@ mod tests {
     fn add_remove_and_check_registration_whitelisted() {
         let context = get_context(vec![], false);
         testing_env!(context);
-        let mut contract = WhitelistIdoContract::new("dragonvu.testnet".to_string());
+        let mut contract = WhitelistIdoContract::init("dragonvu.testnet".to_string());
         contract.add_registration_whitelist(["vuongnt.testnet".to_string()].to_vec());
         contract.remove_registration_whitelist(["vuongnt.testnet".to_string()].to_vec());
         assert_eq!(
@@ -291,13 +292,12 @@ mod tests {
         );
     }
 
-
     #[test]
     // Check initial whitelisted
     fn check_initial_whitelisted() {
         let context = get_context(vec![], false);
         testing_env!(context);
-        let contract = WhitelistIdoContract::new("dragonvu.testnet".to_string());
+        let contract = WhitelistIdoContract::init("dragonvu.testnet".to_string());
         assert_eq!(
             false,
             contract.is_whitelisted("vuongnt.testnet".to_string())
@@ -309,12 +309,9 @@ mod tests {
     fn add_and_check_whitelisted() {
         let context = get_context(vec![], false);
         testing_env!(context);
-        let mut contract = WhitelistIdoContract::new("dragonvu.testnet".to_string());
+        let mut contract = WhitelistIdoContract::init("dragonvu.testnet".to_string());
         contract.add_whitelist(["vuongnt.testnet".to_string()].to_vec());
-        assert_eq!(
-            true,
-            contract.is_whitelisted("vuongnt.testnet".to_string())
-        );
+        assert_eq!(true, contract.is_whitelisted("vuongnt.testnet".to_string()));
     }
 
     #[test]
@@ -322,7 +319,7 @@ mod tests {
     fn add_remove_and_check_whitelisted() {
         let context = get_context(vec![], false);
         testing_env!(context);
-        let mut contract = WhitelistIdoContract::new("dragonvu.testnet".to_string());
+        let mut contract = WhitelistIdoContract::init("dragonvu.testnet".to_string());
         contract.add_whitelist(["vuongnt.testnet".to_string()].to_vec());
         contract.remove_whitelist(["vuongnt.testnet".to_string()].to_vec());
         assert_eq!(

@@ -9,43 +9,86 @@ export default function Owner({ currentUser, contract }) {
     const [accountIdRemove, setAccountIdRemove] = useState('')
     const [accountIdAddWhitelist, setAccountIdAddWhitelist] = useState('')
 
+    const [accountIdRegistrationRemove, setAccountIdRegistrationRemove] = useState('')
+    const [accountIdAddRegistrationWhitelist, setAccountIdAddRegistrationWhitelist] = useState('')
+
     useEffect(() => {
-        try {
-            contract.get_list_registration_whitelist().then(setListWhitelistApply)
-            contract.get_list_whitelisted().then(setListWhitelised)
-        } catch (error) {
-            console.log('error', error)
-        }
+        getListData()
     }, [])
 
-    const getBlockIndex = () => {
-        contract.getBlockIndex().then(data => console.log('data', data))
+    const getListData = () => {
+        contract.get_list_registration_whitelist().then(setListWhitelistApply)
+        contract.get_list_whitelisted().then(setListWhitelised)
+    }
+
+    const randomWhitelist = () => {
+    }
+
+    const addRegistrationWhitelist = () => {
+        contract.add_registration_whitelist({
+            account_ids: [accountIdAddRegistrationWhitelist]
+        }).then(data => getListData())
+    }
+
+    const removeRegistrationWhitelist = () => {
+        contract.remove_registration_whitelist({
+            account_ids: [accountIdRegistrationRemove]
+        }).then(data => getListData())
     }
 
     const addWhitelist = () => {
         contract.add_whitelist({
             account_ids: [accountIdAddWhitelist]
-        }).then(data => { })
+        }).then(data => getListData())
     }
 
     const removeWhitelist = () => {
         contract.remove_whitelist({
             account_ids: [accountIdRemove]
-        }).then(data => { })
+        }).then(data => getListData())
     }
 
     return (
         <div>
             <h4>Hello boss {currentUser.accountId} !</h4>
             <h4>List apply to whitelist</h4>
+            {listWhitelistApply.length == 0 && <p>Not yet</p>}
             {listWhitelistApply.map(item => <p>{item}</p>)}
-            <p>Random list whitelist</p>
-            <button onClick={getBlockIndex}>Random</button>
+
             <h4>List whitelisted</h4>
             {listWhitelisted.length == 0 && <p>Not yet</p>}
             {listWhitelisted.map((item, index) => <p key={index.toString()}>{item}</p>)}
             <p>Number of whitelisted: {listWhitelisted.length}</p>
 
+            <div className='mt28' />
+            <p>Add account id to registration whitelist</p>
+            <p className="highlight">
+                <label htmlFor="message">AccountId:</label>
+                <input
+                    value={accountIdAddRegistrationWhitelist}
+                    autoComplete="off"
+                    id="add_registration_whitelist"
+                    onChange={evt => setAccountIdAddRegistrationWhitelist(evt.target.value)}
+                />
+            </p>
+            <button onClick={addRegistrationWhitelist}>
+                Add
+            </button>
+            <p>Remove account id from registration whitelist</p>
+            <p className="highlight">
+                <label htmlFor="message">AccountId:</label>
+                <input
+                    autoComplete="off"
+                    value={accountIdRegistrationRemove}
+                    id="removeregistration_registration_whitelist"
+                    onChange={evt => setAccountIdRegistrationRemove(evt.target.value)}
+                />
+            </p>
+            <button onClick={removeRegistrationWhitelist}>
+                Remove
+            </button>
+
+            <div className='mt28' />
             <p>Add account id to whitelist</p>
             <p className="highlight">
                 <label htmlFor="message">AccountId:</label>
@@ -72,6 +115,10 @@ export default function Owner({ currentUser, contract }) {
             <button onClick={removeWhitelist}>
                 Remove
             </button>
+
+            <div className='mt28' />
+            <p>Random list whitelist</p>
+            <button onClick={randomWhitelist}>Random</button>
         </div>
     )
 
